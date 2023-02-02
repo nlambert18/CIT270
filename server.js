@@ -12,12 +12,23 @@ const Redis = require('redis');
 
 const redisClient = Redis.createClient({url:"redis://127.0.0.1:6379"});
 
+const cookieParser = require("cookie-parser");
+
 app.use(bodyParser.json()); //application middleware, looks for incoming data
 
 app.use(express.static('public'));
 
+app.use(cookieParser());
+
 app.get("/", (req, res) => {
     res.send("Hello Nathan!");
+});
+
+app.get("/validate", async(req, res) =>{
+    const loginToken = req.cookies.stedicookie;
+    console.log("loginToken", loginToken);
+    const loginUser = await redisClient.hGet('TokenMap', loginToken);
+    res.send(loginUser);
 });
 
 app.post('/login', async(req, res) => {
@@ -28,6 +39,8 @@ app.post('/login', async(req, res) => {
     const correctPassword = await redisClient.hGet('UserMap', loginUser);
     if (loginPassword==correctPassword){
         const loginToken = uuidv4();
+        await redisClient.hSet('TokenMap',loginToken,loginUser);
+        res.cookie('stedicookie', loginToken);
         res.send(loginToken);
     } else {
         res.status(401);
