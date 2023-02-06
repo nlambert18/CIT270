@@ -37,6 +37,7 @@ app.use(cookieParser());
 app.post('/rapidsteptest', async (req,res)=>{
     // const loginToken = req.cookies.stedicookie;
     const steps = req.body;
+    await redisClient.zAdd('Steps',[{score:0,value:JSON.stringify(steps)}]);
     console.log('Steps',steps);
     res.send('saved');
 });
@@ -46,7 +47,7 @@ app.get("/", (req, res) => {
 });
 
 app.get("/validate", async(req, res) =>{
-    // const loginToken = req.cookies.stedicookie;
+    const loginToken = req.cookies.stedicookie;
     console.log("loginToken", loginToken);
     const loginUser = await redisClient.hGet('TokenMap', loginToken);
     res.send(loginUser);
